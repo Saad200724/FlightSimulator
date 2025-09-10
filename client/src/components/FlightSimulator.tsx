@@ -5,6 +5,7 @@ import Aircraft from "./Aircraft";
 import Terrain from "./Terrain";
 import HUD from "./HUD";
 import CameraController from "./CameraController";
+import WeatherControl from "./WeatherControl";
 import { useFlightSimulator } from "../lib/stores/useFlightSimulator";
 
 export default function FlightSimulator() {
@@ -46,6 +47,9 @@ export default function FlightSimulator() {
       
       {/* HUD Overlay */}
       <HUD />
+      
+      {/* Weather Control */}
+      <WeatherControl />
     </group>
   );
 }

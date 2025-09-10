@@ -12,6 +12,12 @@ interface PhysicsState {
   fuel: number;
 }
 
+interface WeatherEffects {
+  windForce: Vector3;
+  turbulence: Vector3;
+  atmosphericDrag: number;
+}
+
 interface Controls {
   pitchUp: boolean;
   pitchDown: boolean;
@@ -38,7 +44,8 @@ export function updatePhysics({
   fuel,
   controls,
   aircraft,
-  delta
+  delta,
+  weatherEffects
 }: {
   position: Vector3;
   rotation: Vector3;
@@ -48,6 +55,7 @@ export function updatePhysics({
   controls: Controls;
   aircraft: AircraftData;
   delta: number;
+  weatherEffects?: WeatherEffects;
 }): PhysicsState {
   
   const newState = {
@@ -113,14 +121,33 @@ export function updatePhysics({
   // Gravity
   newState.velocity.y -= 9.81 * delta;
 
-  // Air resistance/drag
+  // Weather effects
+  if (weatherEffects) {
+    // Apply wind force
+    newState.velocity.x += weatherEffects.windForce.x * delta;
+    newState.velocity.y += weatherEffects.windForce.y * delta;
+    newState.velocity.z += weatherEffects.windForce.z * delta;
+
+    // Apply turbulence
+    newState.velocity.x += weatherEffects.turbulence.x * delta;
+    newState.velocity.y += weatherEffects.turbulence.y * delta;
+    newState.velocity.z += weatherEffects.turbulence.z * delta;
+    
+    // Turbulence affects attitude as well
+    newState.rotation.x += weatherEffects.turbulence.x * 0.01 * delta;
+    newState.rotation.z += weatherEffects.turbulence.z * 0.01 * delta;
+  }
+
+  // Air resistance/drag (enhanced by weather)
   const speedFactor = Math.sqrt(newState.velocity.x ** 2 + newState.velocity.y ** 2 + newState.velocity.z ** 2);
-  const dragForce = aircraft.dragCoefficient * speedFactor * delta;
+  const baseDrag = aircraft.dragCoefficient * speedFactor * delta;
+  const weatherDrag = weatherEffects ? weatherEffects.atmosphericDrag : 0;
+  const totalDrag = Math.max(0, Math.min(baseDrag + weatherDrag, 0.95)); // Clamp for stability
   
   if (speedFactor > 0) {
-    newState.velocity.x *= (1 - dragForce);
-    newState.velocity.y *= (1 - dragForce * 0.5); // Less drag on vertical movement
-    newState.velocity.z *= (1 - dragForce);
+    newState.velocity.x *= (1 - totalDrag);
+    newState.velocity.y *= (1 - totalDrag * 0.5); // Less drag on vertical movement
+    newState.velocity.z *= (1 - totalDrag);
   }
 
   // Update position

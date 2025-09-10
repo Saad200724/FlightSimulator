@@ -58,8 +58,21 @@ function App() {
               }}
               gl={{
                 antialias: true,
-                powerPreference: "high-performance"
+                powerPreference: "high-performance",
+                failIfMajorPerformanceCaveat: false
               }}
+              onCreated={({ gl }) => {
+                console.log("WebGL context created:", gl.getContext());
+              }}
+              fallback={
+                <div className="flex items-center justify-center h-full bg-blue-500 text-white">
+                  <div className="text-center">
+                    <h2 className="text-2xl mb-4">WebGL Not Available</h2>
+                    <p>Your browser or environment doesn't support WebGL.</p>
+                    <p>The flight simulator requires WebGL to run.</p>
+                  </div>
+                </div>
+              }
             >
               <color attach="background" args={["#87CEEB"]} />
               

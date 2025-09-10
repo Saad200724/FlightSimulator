@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { WeatherSystem, WeatherConditions } from "../weatherSystem";
 
 export type GamePhase = "selection" | "flying";
 export type CameraMode = "chase" | "cockpit" | "free";
@@ -30,6 +31,10 @@ interface FlightSimulatorState {
   speed: number;
   heading: number;
   
+  // Weather system
+  weatherSystem: WeatherSystem;
+  weatherConditions: WeatherConditions;
+  
   // Actions
   setGamePhase: (phase: GamePhase) => void;
   setSelectedAircraft: (aircraft: string) => void;
@@ -42,11 +47,12 @@ interface FlightSimulatorState {
   setAltitude: (altitude: number) => void;
   setSpeed: (speed: number) => void;
   setHeading: (heading: number) => void;
+  setWeatherConditions: (conditions: WeatherConditions) => void;
   reset: () => void;
 }
 
 export const useFlightSimulator = create<FlightSimulatorState>()(
-  subscribeWithSelector((set) => ({
+  subscribeWithSelector((set, get) => ({
     // Initial state
     gamePhase: "selection",
     selectedAircraft: null,
@@ -63,6 +69,10 @@ export const useFlightSimulator = create<FlightSimulatorState>()(
     speed: 0,
     heading: 0,
     
+    // Weather system initialization
+    weatherSystem: new WeatherSystem(),
+    weatherConditions: WeatherSystem.getCalmWeather(),
+    
     // Actions
     setGamePhase: (phase) => set({ gamePhase: phase }),
     setSelectedAircraft: (aircraft) => set({ selectedAircraft: aircraft }),
@@ -75,6 +85,10 @@ export const useFlightSimulator = create<FlightSimulatorState>()(
     setAltitude: (altitude) => set({ altitude }),
     setSpeed: (speed) => set({ speed }),
     setHeading: (heading) => set({ heading }),
+    setWeatherConditions: (conditions) => set((state) => {
+      state.weatherSystem.updateConditions(conditions);
+      return { weatherConditions: state.weatherSystem.getConditions() };
+    }),
     
     reset: () => set({
       position: { x: 0, y: 10, z: 0 },

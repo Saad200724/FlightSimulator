@@ -24,6 +24,7 @@ enum Controls {
 
 export default function Aircraft({ aircraftType }: AircraftProps) {
   const aircraftRef = useRef<THREE.Group>(null);
+  const propellerRef = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
   const [, getControls] = useKeyboardControls<Controls>();
   
@@ -33,6 +34,7 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     velocity,
     throttle,
     fuel,
+    weatherSystem,
     setPosition,
     setRotation,
     setVelocity,
@@ -55,6 +57,11 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
 
   useFrame((state, delta) => {
     if (!aircraftRef.current) return;
+
+    // Animate propeller
+    if (propellerRef.current) {
+      propellerRef.current.rotation.z = state.clock.elapsedTime * 20;
+    }
 
     const controls = getControls();
     
@@ -81,7 +88,10 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
       return;
     }
 
-    // Update physics
+    // Get weather effects for current altitude
+    const weatherEffects = weatherSystem.getEffects(position.y, delta);
+
+    // Update physics with weather effects
     const newState = updatePhysics({
       position,
       rotation,
@@ -90,7 +100,8 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
       fuel,
       controls,
       aircraft,
-      delta
+      delta,
+      weatherEffects
     });
 
     // Update aircraft transform
@@ -147,13 +158,13 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
         </mesh>
         
         {/* Propeller (simple spinning effect) */}
-        <mesh position={[0, 0, 2]} rotation={[0, 0, state.clock.elapsedTime * 20]}>
+        <mesh position={[0, 0, 2]}>
           <cylinderGeometry args={[0.05, 0.05, 0.2, 8]} />
           <meshPhongMaterial color="#333333" />
         </mesh>
         
         {/* Propeller blades */}
-        <mesh position={[0, 0, 2.1]} rotation={[0, 0, state.clock.elapsedTime * 20]}>
+        <mesh ref={propellerRef} position={[0, 0, 2.1]}>
           <boxGeometry args={[3, 0.1, 0.05]} />
           <meshPhongMaterial color="#222222" />
         </mesh>
