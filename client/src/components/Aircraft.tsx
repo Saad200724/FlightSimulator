@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useKeyboardControls } from "@react-three/drei";
+import { useKeyboardControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { useFlightSimulator } from "../lib/stores/useFlightSimulator";
 import { updatePhysics } from "../lib/physics";
@@ -181,46 +181,35 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     }
   });
 
+  // Load custom aircraft GLB model
+  const { scene } = useGLTF('/models/aircraft.glb');
+  
   // Create aircraft mesh based on type
   const renderAircraft = () => {
-    const color = aircraft.color;
+    const modelClone = scene.clone();
+    
+    // Apply shadows to all meshes in the model
+    modelClone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
     
     return (
       <group>
-        {/* Fuselage */}
-        <mesh position={[0, 0, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.3, 0.5, 4, 8]} />
-          <meshPhongMaterial color={color} />
-        </mesh>
+        {/* Custom GLB Aircraft Model */}
+        <primitive 
+          object={modelClone} 
+          scale={[0.5, 0.5, 0.5]} 
+          position={[0, 0, 0]}
+          rotation={[0, 0, 0]}
+        />
         
-        {/* Wings */}
-        <mesh position={[0, -0.2, 0]} rotation={[0, 0, 0]} castShadow>
-          <boxGeometry args={[8, 0.2, 1.5]} />
-          <meshPhongMaterial color={color} />
-        </mesh>
-        
-        {/* Tail */}
-        <mesh position={[0, 0.5, -1.8]} castShadow>
-          <boxGeometry args={[0.2, 1.5, 0.8]} />
-          <meshPhongMaterial color={color} />
-        </mesh>
-        
-        {/* Horizontal stabilizer */}
-        <mesh position={[0, 0, -1.8]} castShadow>
-          <boxGeometry args={[3, 0.2, 0.6]} />
-          <meshPhongMaterial color={color} />
-        </mesh>
-        
-        {/* Propeller (simple spinning effect) */}
-        <mesh position={[0, 0, 2]}>
-          <cylinderGeometry args={[0.05, 0.05, 0.2, 8]} />
-          <meshPhongMaterial color="#333333" />
-        </mesh>
-        
-        {/* Propeller blades */}
-        <mesh ref={propellerRef} position={[0, 0, 2.1]}>
+        {/* Fallback Propeller Animation (if not in GLB) */}
+        <mesh ref={propellerRef} position={[0, 0, 2]} visible={false}>
           <boxGeometry args={[3, 0.1, 0.05]} />
-          <meshPhongMaterial color="#222222" />
+          <meshPhongMaterial color="#222222" transparent opacity={0.7} />
         </mesh>
       </group>
     );
