@@ -2,11 +2,12 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
 import Aircraft from "./Aircraft";
-import Terrain from "./Terrain";
+import DetailedTerrain from "./DetailedTerrain";
 import HUD from "./HUD";
 import CameraController from "./CameraController";
 import WeatherControl from "./WeatherControl";
 import AdvancedInstruments from "./AdvancedInstruments";
+import NavigationDisplay from "./NavigationDisplay";
 import { useFlightSimulator } from "../lib/stores/useFlightSimulator";
 
 export default function FlightSimulator() {
@@ -37,8 +38,8 @@ export default function FlightSimulator() {
         shadow-camera-bottom={-100}
       />
       
-      {/* Terrain */}
-      <Terrain />
+      {/* Detailed Terrain */}
+      <DetailedTerrain />
       
       {/* Aircraft */}
       {selectedAircraft && <Aircraft aircraftType={selectedAircraft} />}
@@ -54,6 +55,9 @@ export default function FlightSimulator() {
       
       {/* Advanced Instruments */}
       <AdvancedInstruments />
+      
+      {/* Navigation Display */}
+      <NavigationDisplay />
     </group>
   );
 }
