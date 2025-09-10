@@ -203,7 +203,7 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
           object={modelClone} 
           scale={[0.5, 0.5, 0.5]} 
           position={[0, 0, 0]}
-          rotation={[0, 0, 0]}
+          rotation={[0, Math.PI, 0]}
         />
         
         {/* Fallback Propeller Animation (if not in GLB) */}
