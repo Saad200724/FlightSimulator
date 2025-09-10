@@ -42,7 +42,8 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     setFuel,
     setAltitude,
     setSpeed,
-    setHeading
+    setHeading,
+    setVerticalSpeed
   } = useFlightSimulator();
 
   const aircraft = aircraftData[aircraftType];
@@ -115,9 +116,10 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     setFuel(newState.fuel);
     
     // Update HUD values
-    setAltitude(newState.position.y);
-    setSpeed(Math.sqrt(newState.velocity.x ** 2 + newState.velocity.y ** 2 + newState.velocity.z ** 2));
+    setAltitude(newState.position.y * 3.28084); // Convert meters to feet
+    setSpeed(Math.sqrt(newState.velocity.x ** 2 + newState.velocity.z ** 2)); // Ground speed (horizontal only)
     setHeading((newState.rotation.y * 180 / Math.PI + 360) % 360);
+    setVerticalSpeed(newState.velocity.y * 196.85); // Convert to feet per minute
 
     // Ground collision
     if (newState.position.y < 1) {

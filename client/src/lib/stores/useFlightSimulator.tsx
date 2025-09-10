@@ -30,6 +30,7 @@ interface FlightSimulatorState {
   altitude: number;
   speed: number;
   heading: number;
+  verticalSpeed: number;
   
   // Weather system
   weatherSystem: WeatherSystem;
@@ -47,6 +48,7 @@ interface FlightSimulatorState {
   setAltitude: (altitude: number) => void;
   setSpeed: (speed: number) => void;
   setHeading: (heading: number) => void;
+  setVerticalSpeed: (verticalSpeed: number) => void;
   setWeatherConditions: (conditions: WeatherConditions) => void;
   reset: () => void;
 }
@@ -65,9 +67,10 @@ export const useFlightSimulator = create<FlightSimulatorState>()(
     
     cameraMode: "chase",
     
-    altitude: 10,
+    altitude: 32.8084, // 10 meters in feet
     speed: 0,
     heading: 0,
+    verticalSpeed: 0,
     
     // Weather system initialization
     weatherSystem: new WeatherSystem(),
@@ -85,6 +88,7 @@ export const useFlightSimulator = create<FlightSimulatorState>()(
     setAltitude: (altitude) => set({ altitude }),
     setSpeed: (speed) => set({ speed }),
     setHeading: (heading) => set({ heading }),
+    setVerticalSpeed: (verticalSpeed) => set({ verticalSpeed }),
     setWeatherConditions: (conditions) => set((state) => {
       state.weatherSystem.updateConditions(conditions);
       return { weatherConditions: state.weatherSystem.getConditions() };
@@ -96,9 +100,10 @@ export const useFlightSimulator = create<FlightSimulatorState>()(
       velocity: { x: 0, y: 0, z: 0 },
       throttle: 0,
       fuel: 100,
-      altitude: 10,
+      altitude: 32.8084, // 10 meters in feet
       speed: 0,
-      heading: 0
+      heading: 0,
+      verticalSpeed: 0
     })
   }))
 );
