@@ -202,7 +202,7 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
         <primitive 
           object={modelClone} 
           scale={[0.5, 0.5, 0.5]} 
-          position={[0, 0, 0]}
+          position={[0, -1, 0]}
           rotation={[0, Math.PI, 0]}
         />
         
