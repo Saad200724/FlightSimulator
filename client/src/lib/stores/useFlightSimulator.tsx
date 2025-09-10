@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { WeatherSystem, WeatherConditions } from "../weatherSystem";
+import { EngineSystem, EngineState, SystemFailure } from "../engineSystems";
 
 export type GamePhase = "selection" | "flying";
 export type CameraMode = "chase" | "cockpit" | "free";
@@ -36,6 +37,11 @@ interface FlightSimulatorState {
   weatherSystem: WeatherSystem;
   weatherConditions: WeatherConditions;
   
+  // Engine system
+  engineSystem: EngineSystem;
+  engineState: EngineState;
+  systemFailures: SystemFailure[];
+  
   // Actions
   setGamePhase: (phase: GamePhase) => void;
   setSelectedAircraft: (aircraft: string) => void;
@@ -50,6 +56,10 @@ interface FlightSimulatorState {
   setHeading: (heading: number) => void;
   setVerticalSpeed: (verticalSpeed: number) => void;
   setWeatherConditions: (conditions: WeatherConditions) => void;
+  startEngine: () => void;
+  shutdownEngine: () => void;
+  repairFailure: (failureType: string) => void;
+  emergencyRestart: () => void;
   reset: () => void;
 }
 
@@ -76,6 +86,21 @@ export const useFlightSimulator = create<FlightSimulatorState>()(
     weatherSystem: new WeatherSystem(),
     weatherConditions: WeatherSystem.getCalmWeather(),
     
+    // Engine system initialization
+    engineSystem: new EngineSystem(),
+    engineState: {
+      isRunning: false,
+      rpm: 0,
+      temperature: 20,
+      oilPressure: 0,
+      fuelFlow: 0,
+      startupSequenceActive: false,
+      shutdownSequenceActive: false,
+      failed: false,
+      failureType: null
+    },
+    systemFailures: [],
+    
     // Actions
     setGamePhase: (phase) => set({ gamePhase: phase }),
     setSelectedAircraft: (aircraft) => set({ selectedAircraft: aircraft }),
@@ -92,6 +117,26 @@ export const useFlightSimulator = create<FlightSimulatorState>()(
     setWeatherConditions: (conditions) => set((state) => {
       state.weatherSystem.updateConditions(conditions);
       return { weatherConditions: state.weatherSystem.getConditions() };
+    }),
+    
+    startEngine: () => set((state) => {
+      state.engineSystem.startEngine();
+      return {};
+    }),
+    
+    shutdownEngine: () => set((state) => {
+      state.engineSystem.shutdownEngine();
+      return {};
+    }),
+    
+    repairFailure: (failureType) => set((state) => {
+      state.engineSystem.repairFailure(failureType);
+      return { systemFailures: state.engineSystem.getFailures() };
+    }),
+    
+    emergencyRestart: () => set((state) => {
+      state.engineSystem.emergencyRestart();
+      return {};
     }),
     
     reset: () => set({

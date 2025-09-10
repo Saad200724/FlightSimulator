@@ -6,8 +6,6 @@ import DetailedTerrain from "./DetailedTerrain";
 import HUD from "./HUD";
 import CameraController from "./CameraController";
 import WeatherControl from "./WeatherControl";
-import AdvancedInstruments from "./AdvancedInstruments";
-import NavigationDisplay from "./NavigationDisplay";
 import { useFlightSimulator } from "../lib/stores/useFlightSimulator";
 
 export default function FlightSimulator() {
@@ -53,11 +51,6 @@ export default function FlightSimulator() {
       {/* Weather Control */}
       <WeatherControl />
       
-      {/* Advanced Instruments */}
-      <AdvancedInstruments />
-      
-      {/* Navigation Display */}
-      <NavigationDisplay />
     </group>
   );
 }

@@ -1,4 +1,3 @@
-import { Html } from "@react-three/drei";
 import { useFlightSimulator } from "../lib/stores/useFlightSimulator";
 import { useState, useEffect } from "react";
 
@@ -19,15 +18,14 @@ export default function AdvancedInstruments() {
   const bankAngle = -rollAngle; // Bank is opposite of roll
 
   return (
-    <Html fullscreen>
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-white font-mono pointer-events-auto">
-        {/* Instrument panel toggle */}
-        <button
-          onClick={() => setShowInstruments(!showInstruments)}
-          className="bg-black bg-opacity-70 hover:bg-opacity-90 p-2 rounded mb-2 transition-all duration-200 mx-auto block"
-        >
-          <div className="text-green-400 text-sm font-bold">INSTRUMENTS</div>
-        </button>
+    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-10 text-white font-mono pointer-events-auto bg-black bg-opacity-80 p-2 rounded">
+      {/* Instrument panel toggle */}
+      <button
+        onClick={() => setShowInstruments(!showInstruments)}
+        className="bg-black bg-opacity-70 hover:bg-opacity-90 p-2 rounded mb-2 transition-all duration-200 mx-auto block"
+      >
+        <div className="text-green-400 text-sm font-bold">INSTRUMENTS</div>
+      </button>
 
         {showInstruments && (
           <div className="bg-black bg-opacity-80 p-4 rounded-lg">
@@ -221,7 +219,6 @@ export default function AdvancedInstruments() {
             </div>
           </div>
         )}
-      </div>
-    </Html>
+    </div>
   );
 }

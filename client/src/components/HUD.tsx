@@ -48,7 +48,9 @@ export default function HUD() {
         <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 p-4 rounded text-sm">
           <div className="text-green-400 font-bold mb-2">CONTROLS</div>
           <div className="space-y-1">
-            <div>W/S: Throttle</div>
+            <div>S: Start Engine</div>
+            <div>X: Shutdown Engine</div>
+            <div>Q/E: Throttle</div>
             <div>I/K: Pitch</div>
             <div>A/D: Yaw</div>
             <div>J/L: Roll</div>

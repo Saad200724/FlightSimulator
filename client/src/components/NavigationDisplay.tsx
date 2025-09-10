@@ -1,4 +1,3 @@
-import { Html } from "@react-three/drei";
 import { useFlightSimulator } from "../lib/stores/useFlightSimulator";
 import { waypoints, type Waypoint } from "../lib/navigationData";
 import { useState } from "react";
@@ -32,18 +31,17 @@ export default function NavigationDisplay() {
     .slice(0, 8);
 
   return (
-    <Html fullscreen>
-      <div className="fixed top-4 right-80 text-white font-mono pointer-events-auto">
-        {/* Navigation toggle button */}
-        <button
-          onClick={() => setShowNav(!showNav)}
-          className="bg-black bg-opacity-70 hover:bg-opacity-90 p-2 rounded mb-2 transition-all duration-200"
-        >
-          <div className="text-green-400 text-xs font-bold">NAV</div>
-          <div className="text-xs">
-            {nearbyWaypoints.length} pts
-          </div>
-        </button>
+    <div className="fixed top-4 right-80 z-10 text-white font-mono pointer-events-auto bg-black bg-opacity-80 p-2 rounded">
+      {/* Navigation toggle button */}
+      <button
+        onClick={() => setShowNav(!showNav)}
+        className="bg-black bg-opacity-70 hover:bg-opacity-90 p-2 rounded mb-2 transition-all duration-200"
+      >
+        <div className="text-green-400 text-xs font-bold">NAV</div>
+        <div className="text-xs">
+          {nearbyWaypoints.length} pts
+        </div>
+      </button>
 
         {/* Navigation panel */}
         {showNav && (
@@ -149,7 +147,6 @@ export default function NavigationDisplay() {
             )}
           </div>
         )}
-      </div>
-    </Html>
+    </div>
   );
 }

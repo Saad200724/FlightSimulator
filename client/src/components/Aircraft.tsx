@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -19,6 +19,8 @@ enum Controls {
   yawRight = 'yawRight',
   rollLeft = 'rollLeft',
   rollRight = 'rollRight',
+  startEngine = 'startEngine',
+  shutdownEngine = 'shutdownEngine',
   reset = 'reset'
 }
 
@@ -26,7 +28,8 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
   const aircraftRef = useRef<THREE.Group>(null);
   const propellerRef = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
-  const [, getControls] = useKeyboardControls<Controls>();
+  const [subscribe, getControls] = useKeyboardControls<Controls>();
+  const [prevEngineKeys, setPrevEngineKeys] = useState({ startEngine: false, shutdownEngine: false });
   
   const {
     position,
@@ -35,6 +38,8 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     throttle,
     fuel,
     weatherSystem,
+    engineSystem,
+    engineState,
     setPosition,
     setRotation,
     setVelocity,
@@ -43,7 +48,9 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     setAltitude,
     setSpeed,
     setHeading,
-    setVerticalSpeed
+    setVerticalSpeed,
+    startEngine,
+    shutdownEngine
   } = useFlightSimulator();
 
   const aircraft = aircraftData[aircraftType];
@@ -56,25 +63,58 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     }
   }, []);
 
+  // Edge-triggered engine controls
+  useEffect(() => {
+    const unsubscribe = subscribe(
+      (state) => ({ startEngine: state.startEngine, shutdownEngine: state.shutdownEngine }),
+      (current) => {
+        // Detect rising edge (key press)
+        if (current.startEngine && !prevEngineKeys.startEngine) {
+          console.log("Engine start key pressed");
+          startEngine();
+        }
+        if (current.shutdownEngine && !prevEngineKeys.shutdownEngine) {
+          console.log("Engine shutdown key pressed");
+          shutdownEngine();
+        }
+        setPrevEngineKeys(current);
+      }
+    );
+    
+    return unsubscribe;
+  }, [subscribe, prevEngineKeys.startEngine, prevEngineKeys.shutdownEngine, startEngine, shutdownEngine]);
+
   useFrame((state, delta) => {
     if (!aircraftRef.current) return;
 
-    // Animate propeller
+    // Animate propeller based on engine RPM
     if (propellerRef.current) {
-      propellerRef.current.rotation.z = state.clock.elapsedTime * 20;
+      if (engineState.isRunning || engineState.startupSequenceActive) {
+        const propellerSpeed = (engineState.rpm / 2700) * 30; // Max 30 rad/s
+        propellerRef.current.rotation.z = state.clock.elapsedTime * propellerSpeed;
+      } else {
+        propellerRef.current.rotation.z = 0;
+      }
     }
 
     const controls = getControls();
     
-    // Handle controls
+    // Engine controls are now handled in useEffect with edge-triggering
+    
+    // Handle throttle controls (only if engine is running)
     let newThrottle = throttle;
-    if (controls.throttleUp) {
-      newThrottle = Math.min(1, throttle + delta * 2);
-      console.log("Throttle up:", newThrottle);
-    }
-    if (controls.throttleDown) {
-      newThrottle = Math.max(0, throttle - delta * 2);
-      console.log("Throttle down:", newThrottle);
+    if (engineState.isRunning && !engineState.failed) {
+      if (controls.throttleUp) {
+        newThrottle = Math.min(1, throttle + delta * 2);
+        console.log("Throttle up:", newThrottle);
+      }
+      if (controls.throttleDown) {
+        newThrottle = Math.max(0, throttle - delta * 2);
+        console.log("Throttle down:", newThrottle);
+      }
+    } else {
+      // Engine not running, throttle goes to idle
+      newThrottle = 0;
     }
     setThrottle(newThrottle);
 
@@ -92,12 +132,18 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     // Get weather effects for current altitude
     const weatherEffects = weatherSystem.getEffects(position.y, delta);
 
+    // Update engine system
+    const updatedEngineState = engineSystem.update(delta, newThrottle, position.y);
+    
+    // Only apply thrust if engine is running and not failed
+    const effectiveThrottle = (updatedEngineState.isRunning && !updatedEngineState.failed) ? newThrottle : 0;
+    
     // Update physics with weather effects
     const newState = updatePhysics({
       position,
       rotation,
       velocity,
-      throttle: newThrottle,
+      throttle: effectiveThrottle,
       fuel,
       controls,
       aircraft,
@@ -115,6 +161,12 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     setVelocity(newState.velocity);
     setFuel(newState.fuel);
     
+    // Update engine state in store
+    useFlightSimulator.setState({ 
+      engineState: updatedEngineState,
+      systemFailures: engineSystem.getFailures() 
+    });
+    
     // Update HUD values
     setAltitude(newState.position.y * 3.28084); // Convert meters to feet
     setSpeed(Math.sqrt(newState.velocity.x ** 2 + newState.velocity.z ** 2)); // Ground speed (horizontal only)
@@ -122,9 +174,9 @@ export default function Aircraft({ aircraftType }: AircraftProps) {
     setVerticalSpeed(newState.velocity.y * 196.85); // Convert to feet per minute
 
     // Ground collision
-    if (newState.position.y < 1) {
+    if (newState.position.y < 2) {
       console.log("Ground collision!");
-      setPosition({ ...newState.position, y: 1 });
+      setPosition({ ...newState.position, y: 2 });
       setVelocity({ x: 0, y: 0, z: 0 });
     }
   });
